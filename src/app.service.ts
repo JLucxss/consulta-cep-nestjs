@@ -12,18 +12,21 @@ export class BuscaCepService {
   
   async findCep(cep: string) {
     
-    const URL_VIA_CEP = `https://viacep.com.br/ws/${cep}/json`
+    const cleanCep = cep.replace(/\D/g, '');
+    
+    if (!cleanCep || cleanCep.length !== 8) {
+      throw new BadRequestException('CEP deve conter 8 dígitos numéricos');
+    }
+    
+    const URL_VIA_CEP = `https://viacep.com.br/ws/${cleanCep}/json`
 
     const response = await firstValueFrom(this.httpService.get(URL_VIA_CEP).pipe(
       catchError((error: AxiosError) => {
-        this.logger.error(error.response?.data)
-        throw new BadRequestException('An error happend')
+        this.logger.error(`Erro ao buscar CEP ${cleanCep}:`, error.message)
+        throw new BadRequestException('Erro ao buscar CEP. Tente novamente.');
       })
     ))
 
-    console.log(response.data)
-    return response.data
-
-
+    return response.data;
   }
 }
